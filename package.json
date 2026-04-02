@@ -20,6 +20,7 @@
     "next": "^15.3.0",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.15.0",
+    "playwright": "^1.59.1",
     "postcss": "^8.5.8",
     "react": "^18",
     "react-dom": "^18",
