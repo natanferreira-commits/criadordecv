@@ -390,11 +390,16 @@ export default function Home() {
   const [cvText, setCvText] = useState('')
   const [jobDesc, setJobDesc] = useState('')
   const [loading, setLoading] = useState(false)
+  const [postingUrl, setPostingUrl] = useState('')
+  const [fetchingJob, setFetchingJob] = useState(false)
   const [result, setResult] = useState('')
   const [slug, setSlug] = useState('Natan-Puggian')
+  const [company, setCompany] = useState('')
   const [requirements, setRequirements] = useState([])
   const [error, setError] = useState('')
   const [jobFocused, setJobFocused] = useState(false)
+  const [applied, setApplied] = useState(false)
+  const [applying, setApplying] = useState(false)
 
   const canGenerate = (cvFile || cvText.trim()) && jobDesc.trim() && !loading
 
@@ -424,12 +429,53 @@ export default function Home() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setResult(data.result)
+      setApplied(false)
       if (data.slug) setSlug(`Natan-Puggian-${data.slug}`)
+      if (data.company) setCompany(data.company)
       if (data.requirements) setRequirements(data.requirements)
     } catch (e) {
       setError(e.message || 'Erro ao gerar o CV.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFetchJob = async () => {
+    if (!postingUrl.trim()) return
+    setFetchingJob(true)
+    setError('')
+    setJobDesc('')
+    try {
+      const res = await fetch('/api/fetch-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: postingUrl }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setJobDesc(data.jobDescription)
+    } catch (e) {
+      setError(e.message || 'Erro ao buscar a vaga.')
+    } finally {
+      setFetchingJob(false)
+    }
+  }
+
+  const handleApplied = async () => {
+    setApplying(true)
+    try {
+      const res = await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company, postingUrl, position: jobDesc.slice(0, 200) }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setApplied(true)
+    } catch (e) {
+      setError(e.message || 'Erro ao salvar no Notion.')
+    } finally {
+      setApplying(false)
     }
   }
 
@@ -506,20 +552,55 @@ export default function Home() {
           )}
         </div>
 
-        {/* Step 2 — Descrição da vaga */}
+        {/* Step 2 — URL da vaga */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>
             <div style={styles.cardNum}>2</div>
-            Descrição da vaga
+            URL da vaga
           </div>
-          <textarea
-            style={{ ...styles.textarea, height: '180px', ...(jobFocused ? styles.textareaFocus : {}) }}
-            placeholder="Cole aqui o texto completo da descrição da vaga..."
-            value={jobDesc}
-            onChange={(e) => setJobDesc(e.target.value)}
-            onFocus={() => setJobFocused(true)}
-            onBlur={() => setJobFocused(false)}
-          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="url"
+              style={{ ...styles.input, flex: 1 }}
+              placeholder="https://linkedin.com/jobs/... ou gupy.io/..."
+              value={postingUrl}
+              onChange={(e) => { setPostingUrl(e.target.value); setJobDesc('') }}
+            />
+            <button
+              onClick={handleFetchJob}
+              disabled={!postingUrl.trim() || fetchingJob}
+              style={{ padding: '12px 18px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', opacity: (!postingUrl.trim() || fetchingJob) ? 0.4 : 1 }}
+            >
+              {fetchingJob ? 'Buscando...' : 'Buscar'}
+            </button>
+          </div>
+          {jobDesc && (
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#aaa', marginBottom: '8px' }}>
+                Descrição extraída
+              </div>
+              <textarea
+                style={{ ...styles.textarea, height: '140px', background: '#fafafa', color: '#555', fontSize: '13px' }}
+                value={jobDesc}
+                onChange={(e) => setJobDesc(e.target.value)}
+              />
+            </div>
+          )}
+          {!jobDesc && (
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#aaa', marginBottom: '8px' }}>
+                Ou cole a descrição manualmente
+              </div>
+              <textarea
+                style={{ ...styles.textarea, height: '140px', ...(jobFocused ? styles.textareaFocus : {}) }}
+                placeholder="Cole aqui o texto da vaga..."
+                value={jobDesc}
+                onChange={(e) => setJobDesc(e.target.value)}
+                onFocus={() => setJobFocused(true)}
+                onBlur={() => setJobFocused(false)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Botão gerar */}
@@ -541,6 +622,25 @@ export default function Home() {
         {/* Erro */}
         {error && (
           <div style={styles.errorBox}>{error}</div>
+        )}
+
+        {/* Botão Marcar como Aplicado */}
+        {result && (
+          <div style={{ width: '100%', maxWidth: '680px', marginTop: '12px' }}>
+            {applied ? (
+              <div style={{ padding: '14px 20px', background: '#f0faf0', border: '1px solid #c3e6c3', borderRadius: '4px', fontSize: '13px', color: '#2a7a2a', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                ✓ Salvo no Notion como "Applied 🙂"
+              </div>
+            ) : (
+              <button
+                onClick={handleApplied}
+                disabled={applying}
+                style={{ width: '100%', padding: '14px', background: '#fff', border: '1.5px solid #111', borderRadius: '4px', fontSize: '13px', fontWeight: '600', color: '#111', cursor: applying ? 'not-allowed' : 'pointer', opacity: applying ? 0.6 : 1, letterSpacing: '0.03em' }}
+              >
+                {applying ? 'Salvando no Notion...' : '✓ Marcar como Aplicado'}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Requisitos da vaga */}

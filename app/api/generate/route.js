@@ -95,12 +95,15 @@ Reescreva meu CV completamente personalizado para essa vaga. Retorne apenas o ma
 
     const lines = raw.split('\n')
     let slug = 'CV'
+    let company = ''
     let requirements = []
     let startLine = 0
 
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].startsWith('SLUG:')) {
-        slug = lines[i].replace('SLUG:', '').trim().replace(/\s+/g, '-')
+        const rawSlug = lines[i].replace('SLUG:', '').trim()
+        company = rawSlug
+        slug = rawSlug.replace(/\s+/g, '-')
         startLine = i + 1
       } else if (lines[i].startsWith('REQUIREMENTS:')) {
         requirements = lines[i].replace('REQUIREMENTS:', '').trim().split(',').map(r => r.trim()).filter(Boolean)
@@ -114,7 +117,7 @@ Reescreva meu CV completamente personalizado para essa vaga. Retorne apenas o ma
     const cvMarkdown = lines.slice(startLine).join('\n').trimStart()
     const result = cvMarkdown.replace(/[—–]/g, '-')
 
-    return NextResponse.json({ result, slug, requirements })
+    return NextResponse.json({ result, slug, company, requirements })
   } catch (err) {
     console.error('generate error:', err)
 
