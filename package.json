@@ -10,12 +10,20 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
     "@notionhq/client": "^5.16.0",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tailwindcss/postcss": "^4.2.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "docx": "^9.0.0",
+    "framer-motion": "^12.38.0",
     "mammoth": "^1.8.0",
     "next": "^15.3.0",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.15.0",
+    "postcss": "^8.5.8",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.2"
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { BackgroundPaths } from '@/components/ui/background-paths'
 
 function renderMarkdown(text) {
   const lines = text.split('\n')
@@ -80,7 +81,6 @@ function renderMarkdown(text) {
 const styles = {
   container: {
     minHeight: '100vh',
-    background: '#f7f7f7',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -96,35 +96,36 @@ const styles = {
     fontWeight: '600',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#888',
+    color: 'rgba(255,255,255,0.4)',
     marginBottom: '8px',
   },
   headerH1: {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#111',
+    color: '#ffffff',
     lineHeight: '1.2',
   },
   headerSub: {
     marginTop: '8px',
     fontSize: '15px',
-    color: '#666',
+    color: 'rgba(255,255,255,0.5)',
   },
   card: {
     width: '100%',
     maxWidth: '680px',
-    background: '#fff',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '8px',
     padding: '28px 32px',
     marginBottom: '12px',
+    backdropFilter: 'blur(12px)',
   },
   cardTitle: {
     fontSize: '11px',
     fontWeight: '700',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    color: '#888',
+    color: 'rgba(255,255,255,0.4)',
     marginBottom: '16px',
     display: 'flex',
     alignItems: 'center',
@@ -134,7 +135,7 @@ const styles = {
     width: '20px',
     height: '20px',
     borderRadius: '50%',
-    background: '#111',
+    background: 'rgba(255,255,255,0.15)',
     color: '#fff',
     fontSize: '10px',
     fontWeight: '700',
@@ -144,33 +145,33 @@ const styles = {
     flexShrink: 0,
   },
   uploadZone: {
-    border: '1.5px dashed #ccc',
-    borderRadius: '4px',
+    border: '1.5px dashed rgba(255,255,255,0.2)',
+    borderRadius: '6px',
     padding: '28px',
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'border-color 0.15s, background 0.15s',
   },
   uploadZoneHover: {
-    borderColor: '#111',
-    background: '#fafafa',
+    borderColor: 'rgba(255,255,255,0.5)',
+    background: 'rgba(255,255,255,0.04)',
   },
   uploadIcon: {
     fontSize: '24px',
     marginBottom: '8px',
-    color: '#aaa',
+    color: 'rgba(255,255,255,0.3)',
   },
   uploadText: {
     fontSize: '14px',
-    color: '#666',
+    color: 'rgba(255,255,255,0.5)',
   },
   uploadTextBold: {
     fontWeight: '600',
-    color: '#111',
+    color: 'rgba(255,255,255,0.85)',
   },
   uploadSub: {
     fontSize: '12px',
-    color: '#aaa',
+    color: 'rgba(255,255,255,0.3)',
     marginTop: '4px',
   },
   fileLoaded: {
@@ -178,9 +179,9 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '14px 16px',
-    background: '#fafafa',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '6px',
   },
   fileIcon: {
     fontSize: '20px',
@@ -188,13 +189,13 @@ const styles = {
   fileName: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#111',
+    color: 'rgba(255,255,255,0.85)',
     flex: 1,
   },
   fileRemove: {
     background: 'none',
     border: 'none',
-    color: '#aaa',
+    color: 'rgba(255,255,255,0.3)',
     cursor: 'pointer',
     fontSize: '18px',
     lineHeight: 1,
@@ -202,63 +203,65 @@ const styles = {
   },
   textarea: {
     width: '100%',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '6px',
     padding: '14px 16px',
     fontSize: '14px',
-    color: '#111',
+    color: 'rgba(255,255,255,0.85)',
+    background: 'rgba(255,255,255,0.05)',
     resize: 'vertical',
     outline: 'none',
     lineHeight: '1.6',
     transition: 'border-color 0.15s',
   },
   textareaFocus: {
-    borderColor: '#111',
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   input: {
     width: '100%',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '6px',
     padding: '12px 16px',
     fontSize: '14px',
-    color: '#111',
+    color: 'rgba(255,255,255,0.85)',
+    background: 'rgba(255,255,255,0.05)',
     outline: 'none',
     transition: 'border-color 0.15s',
-    letterSpacing: '0.05em',
   },
   inputHint: {
     marginTop: '8px',
     fontSize: '12px',
-    color: '#aaa',
+    color: 'rgba(255,255,255,0.3)',
   },
   divider: {
     width: '100%',
     maxWidth: '680px',
     height: '1px',
-    background: '#e5e5e5',
+    background: 'rgba(255,255,255,0.08)',
     margin: '4px 0',
   },
   generateBtn: {
     width: '100%',
     maxWidth: '680px',
     padding: '16px',
-    background: '#111',
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
     color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: '12px',
     fontSize: '14px',
     fontWeight: '600',
     letterSpacing: '0.04em',
     cursor: 'pointer',
     marginTop: '8px',
-    transition: 'opacity 0.15s',
+    transition: 'all 0.2s',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
+    backdropFilter: 'blur(12px)',
   },
   generateBtnDisabled: {
-    opacity: 0.4,
+    opacity: 0.3,
     cursor: 'not-allowed',
   },
   spinner: {
@@ -272,15 +275,16 @@ const styles = {
   resultCard: {
     width: '100%',
     maxWidth: '680px',
-    background: '#fff',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '8px',
     marginTop: '12px',
     overflow: 'hidden',
+    backdropFilter: 'blur(12px)',
   },
   resultHeader: {
     padding: '20px 32px',
-    borderBottom: '1px solid #e5e5e5',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -290,7 +294,7 @@ const styles = {
     fontWeight: '700',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    color: '#888',
+    color: 'rgba(255,255,255,0.4)',
   },
   resultActions: {
     display: 'flex',
@@ -298,21 +302,21 @@ const styles = {
   },
   btnOutline: {
     padding: '8px 16px',
-    background: 'none',
-    border: '1px solid #e5e5e5',
-    borderRadius: '4px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: '6px',
     fontSize: '12px',
     fontWeight: '600',
-    color: '#111',
+    color: 'rgba(255,255,255,0.8)',
     cursor: 'pointer',
     letterSpacing: '0.03em',
-    transition: 'border-color 0.15s',
+    transition: 'all 0.15s',
   },
   btnSolid: {
     padding: '8px 16px',
-    background: '#111',
-    border: '1px solid #111',
-    borderRadius: '4px',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: '6px',
     fontSize: '12px',
     fontWeight: '600',
     color: '#fff',
@@ -324,7 +328,7 @@ const styles = {
     fontSize: '14px',
     lineHeight: '1.7',
     color: '#111',
-    whiteSpace: 'pre-wrap',
+    background: '#fff',
     fontFamily: 'inherit',
     maxHeight: '600px',
     overflowY: 'auto',
@@ -333,11 +337,11 @@ const styles = {
     width: '100%',
     maxWidth: '680px',
     padding: '16px 20px',
-    background: '#fff5f5',
-    border: '1px solid #fcc',
-    borderRadius: '4px',
+    background: 'rgba(255,50,50,0.1)',
+    border: '1px solid rgba(255,100,100,0.3)',
+    borderRadius: '6px',
     fontSize: '13px',
-    color: '#c00',
+    color: '#ff8080',
     marginTop: '12px',
   },
 }
@@ -503,16 +507,16 @@ export default function Home() {
   }
 
   return (
-    <>
+    <BackgroundPaths>
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
         textarea:focus, input:focus {
-          border-color: #111 !important;
+          border-color: rgba(255,255,255,0.4) !important;
         }
-        .btn-outline:hover {
-          border-color: #111;
+        ::placeholder {
+          color: rgba(255,255,255,0.25) !important;
         }
       `}</style>
       <div style={styles.container}>
@@ -689,6 +693,6 @@ export default function Home() {
           </div>
         )}
       </div>
-    </>
+    </BackgroundPaths>
   )
 }
