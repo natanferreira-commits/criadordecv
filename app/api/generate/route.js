@@ -63,8 +63,9 @@ Cargo alinhado à vaga | (21) 96674-0046 | www.natanpuggian.site
 ## HABILIDADES (ou SKILLS se inglês)
 [apenas as relevantes para a vaga, separadas por vírgula]
 
-IMPORTANTE: na primeira linha da sua resposta, antes do CV, coloque exatamente:
+IMPORTANTE: nas primeiras linhas da sua resposta, antes do CV, coloque exatamente:
 SLUG: [nome da empresa OU uma palavra-chave da vaga, sem espaços, sem acentos, ex: Google ou DesignerUX]
+REQUIREMENTS: [lista dos requisitos da vaga separados por vírgula, máximo 8, ex: Inglês Fluente, Superior Completo, Photoshop, 2 anos de experiência, CNH B]
 Depois pule uma linha e comece o CV com # NATAN PUGGIAN`,
 
       messages: [
@@ -92,20 +93,28 @@ Reescreva meu CV completamente personalizado para essa vaga. Retorne apenas o ma
 
     const raw = message.content[0].text
 
-    // Extract slug from first line
     const lines = raw.split('\n')
-    let slug = 'Natan-Puggian'
-    let cvMarkdown = raw
+    let slug = 'CV'
+    let requirements = []
+    let startLine = 0
 
-    if (lines[0].startsWith('SLUG:')) {
-      slug = lines[0].replace('SLUG:', '').trim().replace(/\s+/g, '-')
-      cvMarkdown = lines.slice(1).join('\n').trimStart()
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('SLUG:')) {
+        slug = lines[i].replace('SLUG:', '').trim().replace(/\s+/g, '-')
+        startLine = i + 1
+      } else if (lines[i].startsWith('REQUIREMENTS:')) {
+        requirements = lines[i].replace('REQUIREMENTS:', '').trim().split(',').map(r => r.trim()).filter(Boolean)
+        startLine = i + 1
+      } else if (lines[i].startsWith('#')) {
+        startLine = i
+        break
+      }
     }
 
-    // Remove em dashes and replace with hyphen or nothing
+    const cvMarkdown = lines.slice(startLine).join('\n').trimStart()
     const result = cvMarkdown.replace(/[—–]/g, '-')
 
-    return NextResponse.json({ result, slug })
+    return NextResponse.json({ result, slug, requirements })
   } catch (err) {
     console.error('generate error:', err)
 

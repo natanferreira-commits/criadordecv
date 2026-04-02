@@ -392,6 +392,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [slug, setSlug] = useState('Natan-Puggian')
+  const [requirements, setRequirements] = useState([])
   const [error, setError] = useState('')
   const [jobFocused, setJobFocused] = useState(false)
 
@@ -424,6 +425,7 @@ export default function Home() {
       if (data.error) throw new Error(data.error)
       setResult(data.result)
       if (data.slug) setSlug(`Natan-Puggian-${data.slug}`)
+      if (data.requirements) setRequirements(data.requirements)
     } catch (e) {
       setError(e.message || 'Erro ao gerar o CV.')
     } finally {
@@ -539,6 +541,31 @@ export default function Home() {
         {/* Erro */}
         {error && (
           <div style={styles.errorBox}>{error}</div>
+        )}
+
+        {/* Requisitos da vaga */}
+        {requirements.length > 0 && (
+          <div style={{ width: '100%', maxWidth: '680px', marginTop: '12px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', marginBottom: '10px' }}>
+              Requisitos da vaga
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {requirements.map((req, i) => (
+                <div key={i} style={{
+                  padding: '6px 14px',
+                  background: '#fff',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '2px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#333',
+                  letterSpacing: '0.01em',
+                }}>
+                  {req}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Resultado */}
