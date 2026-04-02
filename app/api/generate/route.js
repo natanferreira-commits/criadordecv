@@ -36,31 +36,36 @@ PROCESSO:
 
 REGRAS RÍGIDAS:
 - Preserve TODOS os fatos: datas, nomes de empresas, cargos — NUNCA invente
-- TODOS os bullets de experiência devem usar verbos no INFINITIVO (ex: "Criar", "Desenvolver", "Gerenciar", "Produzir", "Liderar") — NUNCA use passado ("criou", "desenvolveu") nem gerúndio ("criando")
-- RESUMO deve ter 3-4 linhas, direto, sem clichês ("profissional apaixonado", "busco crescimento", etc)
+- TODOS os bullets de experiência devem usar verbos no INFINITIVO (ex: "Criar", "Desenvolver", "Gerenciar") — NUNCA use passado nem gerúndio. Se o CV for em inglês, use infinitivo em inglês (ex: "Create", "Develop", "Manage")
+- RESUMO deve ter 3-4 linhas, direto, sem clichês ("profissional apaixonado", "passionate professional", "busco crescimento", etc)
 - Não mencione habilidades que o candidato não demonstrou ter no CV original
-- Retorne APENAS o CV em markdown, sem comentários, sem explicações
+- IDIOMA: detecte o idioma da descrição da vaga e escreva o CV INTEIRO nesse idioma — se a vaga for em inglês, todo o CV deve ser em inglês (incluindo títulos de seção: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, CERTIFICATIONS). Se for em português, tudo em português.
+- NUNCA use travessão (— ou –) em nenhuma parte do texto. Use hífen (-) se precisar separar algo
+- Retorne APENAS o slug + CV em markdown, sem comentários, sem explicações adicionais
 
-FORMATO DE SAÍDA (use exatamente este markdown):
-# NOME DO CANDIDATO
+FORMATO DE SAÍDA (use exatamente este markdown, com títulos de seção no idioma da vaga):
+# NATAN PUGGIAN
 Cargo alinhado à vaga | (21) 96674-0046 | www.natanpuggian.site
 
-## RESUMO
+## RESUMO (ou SUMMARY se inglês)
 [3-4 linhas específicas para essa vaga]
 
-## EXPERIÊNCIA
+## EXPERIÊNCIA (ou EXPERIENCE se inglês)
 ### Cargo | Empresa | Período
-- Criar/Desenvolver/Gerenciar [descrição relevante para vaga]
-- Produzir/Liderar/Estruturar [descrição relevante para vaga]
+- Verbo no infinitivo + descrição relevante para vaga
 
-## EDUCAÇÃO
+## EDUCAÇÃO (ou EDUCATION se inglês)
 ### Curso | Instituição
 
-## CURSOS E CERTIFICAÇÕES
+## CURSOS E CERTIFICAÇÕES (ou CERTIFICATIONS se inglês)
 [apenas os relevantes para essa vaga, máximo 5, no formato: Nome | Instituição]
 
-## HABILIDADES
-[apenas as relevantes para a vaga, em lista separada por vírgula]`,
+## HABILIDADES (ou SKILLS se inglês)
+[apenas as relevantes para a vaga, separadas por vírgula]
+
+IMPORTANTE: na primeira linha da sua resposta, antes do CV, coloque exatamente:
+SLUG: [nome da empresa OU uma palavra-chave da vaga, sem espaços, sem acentos, ex: Google ou DesignerUX]
+Depois pule uma linha e comece o CV com # NATAN PUGGIAN`,
 
       messages: [
         {
@@ -85,9 +90,22 @@ Reescreva meu CV completamente personalizado para essa vaga. Retorne apenas o ma
       ],
     })
 
-    const result = message.content[0].text
+    const raw = message.content[0].text
 
-    return NextResponse.json({ result })
+    // Extract slug from first line
+    const lines = raw.split('\n')
+    let slug = 'Natan-Puggian'
+    let cvMarkdown = raw
+
+    if (lines[0].startsWith('SLUG:')) {
+      slug = lines[0].replace('SLUG:', '').trim().replace(/\s+/g, '-')
+      cvMarkdown = lines.slice(1).join('\n').trimStart()
+    }
+
+    // Remove em dashes and replace with hyphen or nothing
+    const result = cvMarkdown.replace(/[—–]/g, '-')
+
+    return NextResponse.json({ result, slug })
   } catch (err) {
     console.error('generate error:', err)
 

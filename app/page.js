@@ -391,6 +391,7 @@ export default function Home() {
   const [jobDesc, setJobDesc] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
+  const [slug, setSlug] = useState('Natan-Puggian')
   const [error, setError] = useState('')
   const [jobFocused, setJobFocused] = useState(false)
 
@@ -422,6 +423,7 @@ export default function Home() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setResult(data.result)
+      if (data.slug) setSlug(`Natan-Puggian-${data.slug}`)
     } catch (e) {
       setError(e.message || 'Erro ao gerar o CV.')
     } finally {
@@ -444,7 +446,7 @@ export default function Home() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cv-gerado.${format}`
+      a.download = `${slug}.${format}`
       a.click()
       URL.revokeObjectURL(url)
     } catch {
