@@ -43,7 +43,7 @@ REGRAS RÍGIDAS:
 
 FORMATO DE SAÍDA (use exatamente este markdown):
 # NOME DO CANDIDATO
-Cargo alinhado à vaga | (21) 96674-0046 | natanpuggian.site/portifa
+Cargo alinhado à vaga | (21) 96674-0046 | www.natanpuggian.site
 
 ## RESUMO
 [3-4 linhas específicas para essa vaga]

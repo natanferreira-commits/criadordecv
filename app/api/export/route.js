@@ -63,10 +63,19 @@ async function generatePDF(markdown) {
     if (afterH1 && section.type === 'paragraph') {
       // Contact line — gray, smaller, right under the name
       doc.moveDown(0.15)
-      doc.font('Helvetica')
-        .fontSize(9.5)
-        .fillColor('#666666')
-        .text(section.text, margin, doc.y, { lineGap: 2 })
+      const contactParts = section.text.split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g).filter(Boolean)
+      doc.font('Helvetica').fontSize(9.5)
+      contactParts.forEach((part, idx) => {
+        const isLast = idx === contactParts.length - 1
+        const isUrl = /^(https?:\/\/|www\.)/.test(part)
+        if (isUrl) {
+          const href = part.startsWith('http') ? part : `https://${part}`
+          doc.fillColor('#444444').text(part, { continued: !isLast, link: href, underline: true })
+        } else {
+          doc.fillColor('#666666').text(part, { continued: !isLast })
+        }
+      })
+      doc.moveDown(0.1)
       // Separator line under header
       doc.moveDown(0.6)
       doc.moveTo(margin, doc.y)

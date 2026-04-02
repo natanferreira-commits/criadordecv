@@ -55,9 +55,19 @@ function renderMarkdown(text) {
       )
       continue
     } else {
+      // Render URLs as clickable links within the text
+      const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g
+      const parts = trimmed.split(urlRegex)
+      const rendered = parts.map((part, j) => {
+        if (/^(https?:\/\/|www\.)/.test(part)) {
+          const href = part.startsWith('http') ? part : `https://${part}`
+          return <a key={j} href={href} target="_blank" rel="noreferrer" style={{ color: '#111', textDecoration: 'underline' }}>{part}</a>
+        }
+        return part
+      })
       elements.push(
         <p key={i} style={{ fontSize: '13px', color: '#555', lineHeight: '1.7', margin: '4px 0' }}>
-          {trimmed}
+          {rendered}
         </p>
       )
     }
