@@ -16,7 +16,7 @@ const extraExpText = extraExperience
 
 export async function POST(request) {
   try {
-    const { cvText, jobDescription } = await request.json()
+    const { cvText, jobDescription, extraContext } = await request.json()
 
     if (!cvText || !jobDescription) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
@@ -51,7 +51,8 @@ REGRAS RÍGIDAS:
 - Preserve TODOS os fatos: datas, nomes de empresas, cargos — NUNCA invente
 - TODOS os bullets de experiência devem usar verbos no INFINITIVO (ex: "Criar", "Desenvolver", "Gerenciar") — NUNCA use passado nem gerúndio. Se o CV for em inglês, use infinitivo em inglês (ex: "Create", "Develop", "Manage")
 - RESUMO deve ter 3-4 linhas, direto, sem clichês ("profissional apaixonado", "passionate professional", "busco crescimento", etc)
-- Não mencione habilidades que o candidato não demonstrou ter no CV original
+- Não mencione habilidades que o candidato não demonstrou ter no CV original OU no contexto adicional informado
+- Se houver CONTEXTO ADICIONAL, trate-o como fato REAL do candidato (mesmo que não esteja no CV original) e incorpore no CV sempre que for relevante para a vaga: como uma experiência própria, no resumo ou em bullets. Use só o que ele contou, sem inventar números ou detalhes além do informado
 - IDIOMA: detecte o idioma da descrição da vaga e escreva o CV INTEIRO nesse idioma — se a vaga for em inglês, todo o CV deve ser em inglês (incluindo títulos de seção: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, CERTIFICATIONS). Se for em português, tudo em português.
 - NUNCA use travessão (— ou –) em nenhuma parte do texto. Use hífen (-) se precisar separar algo
 - Retorne APENAS o slug + CV em markdown, sem comentários, sem explicações adicionais
@@ -93,7 +94,12 @@ MEU CV ATUAL:
 ${cvText}
 
 ---
+${extraContext && extraContext.trim() ? `
+CONTEXTO ADICIONAL QUE EU QUERO QUE VOCÊ CONSIDERE (informado agora, pode não estar no CV acima, mas é fato real):
+${extraContext}
 
+---
+` : ''}
 TODOS OS MEUS CURSOS E CERTIFICAÇÕES (selecione apenas os relevantes para essa vaga):
 ${certsText}
 
@@ -109,7 +115,8 @@ Reescreva meu CV completamente personalizado para essa vaga. Retorne apenas o ma
       ],
     })
 
-    const raw = message.content[0].text
+    const textBlock = message.content.find((b) => b.type === 'text')
+    const raw = textBlock?.text || ''
 
     const lines = raw.split('\n')
     let slug = 'CV'

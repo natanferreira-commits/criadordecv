@@ -392,6 +392,7 @@ export default function Home() {
   const [cvFile, setCvFile] = useState(null)
   const [cvText, setCvText] = useState('')
   const [jobDesc, setJobDesc] = useState('')
+  const [extraContext, setExtraContext] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingStep, setLoadingStep] = useState(null) // 'fetching' | 'generating'
   const [postingUrl, setPostingUrl] = useState('')
@@ -450,7 +451,7 @@ export default function Home() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, jobDescription: jobText }),
+        body: JSON.stringify({ cvText, jobDescription: jobText, extraContext }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -598,6 +599,23 @@ export default function Home() {
               />
             </div>
           )}
+        </div>
+
+        {/* Step 3 — Contexto extra (opcional) */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>
+            <div style={styles.cardNum}>3</div>
+            Contexto extra (opcional)
+          </div>
+          <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px', lineHeight: 1.5 }}>
+            Algo que não está no seu CV mas conta pontos pra essa vaga? Experiências, projetos ou resultados. A ferramenta trata como fato real e encaixa na geração quando for relevante.
+          </p>
+          <textarea
+            style={{ ...styles.textarea, height: '120px' }}
+            placeholder="Ex: Tive meu próprio e-commerce por 1 ano. Cuidei de tudo (produto, tráfego, atendimento) e batemos um ótimo faturamento no período..."
+            value={extraContext}
+            onChange={(e) => setExtraContext(e.target.value)}
+          />
         </div>
 
         {/* Botão gerar */}
