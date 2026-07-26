@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import certifications from '../../../data/certifications.js'
+import extraExperience from '../../../data/extra-experience.js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
 const certsText = certifications
   .map(c => `- ${c.name} | ${c.institution}${c.year ? ` | ${c.year}` : ''} | Skills: ${c.skills.join(', ')}`)
+  .join('\n')
+
+const extraExpText = extraExperience
+  .map(e => `- ${e.role} | ${e.company} | ${e.period}\n  Bullets: ${e.bullets.join(' / ')}\n  Relevante para: ${e.relevantFor.join(', ')}`)
   .join('\n')
 
 export async function POST(request) {
@@ -20,7 +25,7 @@ export async function POST(request) {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: 4096,
       system: `Você é um redator especialista em currículos com foco em aprovação em processos seletivos.
 
@@ -33,6 +38,14 @@ PROCESSO:
 4. Coloque as experiências mais relevantes primeiro
 5. Adapte completamente o tom: criativo para agências, técnico para startups de tech, formal para corporações
 6. Na seção de cursos/certificações, escolha APENAS os que têm relação direta com a vaga (máximo 4-5). Ignore o resto.
+
+LIMITE DE TAMANHO (OBRIGATÓRIO - o CV tem que caber em 1 PÁGINA):
+- RESUMO: no máximo 3 linhas
+- EXPERIÊNCIA: no máximo as 4 experiências mais relevantes para a vaga. Corte o resto.
+- Bullets: no máximo 3 por experiência (a mais relevante pode ter 4). Cada bullet com no máximo 140 caracteres (1 a 2 linhas), direto ao ponto
+- CERTIFICAÇÕES: no máximo 4, só as diretamente ligadas à vaga
+- HABILIDADES: uma única linha, separadas por vírgula
+- Seja implacável: se algo não ajuda diretamente nessa vaga, corte. Menos é mais. Prefira o CV curto e afiado a um CV completo.
 
 REGRAS RÍGIDAS:
 - Preserve TODOS os fatos: datas, nomes de empresas, cargos — NUNCA invente
@@ -83,6 +96,11 @@ ${cvText}
 
 TODOS OS MEUS CURSOS E CERTIFICAÇÕES (selecione apenas os relevantes para essa vaga):
 ${certsText}
+
+---
+
+EXPERIÊNCIAS EXTRAS (freelances e projetos pontuais — inclua no CV apenas se for relevante para a vaga):
+${extraExpText}
 
 ---
 

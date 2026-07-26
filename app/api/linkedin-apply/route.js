@@ -8,7 +8,7 @@ import os from 'os'
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-const PROFILE_DIR = path.join(process.cwd(), '.browser-profile')
+const PROFILE_DIR = path.join(os.homedir(), 'AppData', 'Local', 'criadordecv-profile')
 
 // Natan's contact info for standard fields
 const CONTACT = {

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { BackgroundPaths } from '@/components/ui/background-paths'
 
 function renderMarkdown(text) {
   const lines = text.split('\n')
@@ -394,8 +393,8 @@ export default function Home() {
   const [cvText, setCvText] = useState('')
   const [jobDesc, setJobDesc] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingStep, setLoadingStep] = useState(null) // 'fetching' | 'generating'
   const [postingUrl, setPostingUrl] = useState('')
-  const [fetchingJob, setFetchingJob] = useState(false)
   const [result, setResult] = useState('')
   const [slug, setSlug] = useState('Natan-Puggian')
   const [company, setCompany] = useState('')
@@ -404,10 +403,8 @@ export default function Home() {
   const [jobFocused, setJobFocused] = useState(false)
   const [applied, setApplied] = useState(false)
   const [applying, setApplying] = useState(false)
-  const [linkedinStatus, setLinkedinStatus] = useState(null) // { type, message }
-  const [linkedinRunning, setLinkedinRunning] = useState(false)
 
-  const canGenerate = (cvFile || cvText.trim()) && jobDesc.trim() && !loading
+  const canGenerate = (cvFile || cvText.trim()) && (jobDesc.trim() || postingUrl.trim()) && !loading
 
   const handleCvFile = async (file) => {
     setCvFile(file)
@@ -426,11 +423,34 @@ export default function Home() {
     setLoading(true)
     setError('')
     setResult('')
+    let jobText = jobDesc
+
+    if (postingUrl.trim() && !jobDesc.trim()) {
+      setLoadingStep('fetching')
+      try {
+        const res = await fetch('/api/fetch-job', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: postingUrl }),
+        })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        jobText = data.jobDescription
+        setJobDesc(jobText)
+      } catch (e) {
+        setError(e.message || 'Erro ao buscar a vaga.')
+        setLoading(false)
+        setLoadingStep(null)
+        return
+      }
+    }
+
+    setLoadingStep('generating')
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, jobDescription: jobDesc }),
+        body: JSON.stringify({ cvText, jobDescription: jobText }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -443,70 +463,7 @@ export default function Home() {
       setError(e.message || 'Erro ao gerar o CV.')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleFetchJob = async () => {
-    if (!postingUrl.trim()) return
-    setFetchingJob(true)
-    setError('')
-    setJobDesc('')
-    try {
-      const res = await fetch('/api/fetch-job', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: postingUrl }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      setJobDesc(data.jobDescription)
-    } catch (e) {
-      setError(e.message || 'Erro ao buscar a vaga.')
-    } finally {
-      setFetchingJob(false)
-    }
-  }
-
-  const handleLinkedinApply = async () => {
-    if (!postingUrl.includes('linkedin.com')) {
-      setLinkedinStatus({ type: 'error', message: 'A URL precisa ser do LinkedIn.' })
-      return
-    }
-    setLinkedinRunning(true)
-    setLinkedinStatus({ type: 'status', message: 'Iniciando...' })
-
-    try {
-      const res = await fetch('/api/linkedin-apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobUrl: postingUrl, cvMarkdown: result, cvText, jobDescription: jobDesc }),
-      })
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const text = decoder.decode(value)
-        const lines = text.split('\n').filter(l => l.startsWith('data: '))
-        for (const line of lines) {
-          try {
-            const event = JSON.parse(line.slice(6))
-            setLinkedinStatus(event)
-            if (event.type === 'success') {
-              setApplied(false) // trigger notion save
-              handleApplied()
-            }
-            if (event.type === 'success' || event.type === 'error') {
-              setLinkedinRunning(false)
-            }
-          } catch {}
-        }
-      }
-    } catch (e) {
-      setLinkedinStatus({ type: 'error', message: e.message })
-      setLinkedinRunning(false)
+      setLoadingStep(null)
     }
   }
 
@@ -552,7 +509,7 @@ export default function Home() {
   }
 
   return (
-    <BackgroundPaths>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
@@ -607,22 +564,13 @@ export default function Home() {
             <div style={styles.cardNum}>2</div>
             URL da vaga
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="url"
-              style={{ ...styles.input, flex: 1 }}
-              placeholder="https://linkedin.com/jobs/... ou gupy.io/..."
-              value={postingUrl}
-              onChange={(e) => { setPostingUrl(e.target.value); setJobDesc('') }}
-            />
-            <button
-              onClick={handleFetchJob}
-              disabled={!postingUrl.trim() || fetchingJob}
-              style={{ padding: '12px 18px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', opacity: (!postingUrl.trim() || fetchingJob) ? 0.4 : 1 }}
-            >
-              {fetchingJob ? 'Buscando...' : 'Buscar'}
-            </button>
-          </div>
+          <input
+            type="url"
+            style={styles.input}
+            placeholder="https://linkedin.com/jobs/... ou gupy.io/..."
+            value={postingUrl}
+            onChange={(e) => { setPostingUrl(e.target.value); setJobDesc('') }}
+          />
           {jobDesc && (
             <div style={{ marginTop: '12px' }}>
               <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#aaa', marginBottom: '8px' }}>
@@ -661,7 +609,7 @@ export default function Home() {
           {loading ? (
             <>
               <div style={styles.spinner} />
-              Gerando seu CV...
+              {loadingStep === 'fetching' ? 'Buscando vaga...' : 'Gerando seu CV...'}
             </>
           ) : (
             'Gerar CV personalizado'
@@ -673,51 +621,6 @@ export default function Home() {
           <div style={styles.errorBox}>{error}</div>
         )}
 
-        {/* Botões de ação */}
-        {result && (
-          <div style={{ width: '100%', maxWidth: '680px', marginTop: '12px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
-
-            {/* LinkedIn Easy Apply */}
-            {postingUrl?.includes('linkedin.com') && (
-              <div>
-                {linkedinStatus?.type === 'success' ? (
-                  <div style={{ padding: '14px 20px', background: 'rgba(50,200,100,0.1)', border: '1px solid rgba(50,200,100,0.3)', borderRadius: '8px', fontSize: '13px', color: '#4ade80', fontWeight: '500' }}>
-                    ✓ Candidatura enviada no LinkedIn!
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleLinkedinApply}
-                    disabled={linkedinRunning}
-                    style={{ width: '100%', padding: '14px', background: 'linear-gradient(to bottom, rgba(10,102,194,0.3), rgba(10,102,194,0.15))', border: '1px solid rgba(10,102,194,0.5)', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#fff', cursor: linkedinRunning ? 'not-allowed' : 'pointer', opacity: linkedinRunning ? 0.7 : 1, letterSpacing: '0.03em', backdropFilter: 'blur(12px)' }}
-                  >
-                    {linkedinRunning ? '⟳ Automatizando...' : '⚡ Aplicar no LinkedIn (Easy Apply)'}
-                  </button>
-                )}
-                {linkedinStatus && linkedinStatus.type !== 'success' && (
-                  <div style={{ marginTop: '8px', padding: '10px 14px', background: linkedinStatus.type === 'error' ? 'rgba(255,50,50,0.1)' : linkedinStatus.type === 'needs_login' ? 'rgba(255,200,0,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${linkedinStatus.type === 'error' ? 'rgba(255,100,100,0.3)' : linkedinStatus.type === 'needs_login' ? 'rgba(255,200,0,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '6px', fontSize: '12px', color: linkedinStatus.type === 'error' ? '#ff8080' : linkedinStatus.type === 'needs_login' ? '#ffd700' : 'rgba(255,255,255,0.6)' }}>
-                    {linkedinStatus.type === 'needs_login' ? '🔑 ' : linkedinStatus.type === 'error' ? '✕ ' : '· '}
-                    {linkedinStatus.message}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Marcar como Aplicado no Notion */}
-            {applied ? (
-              <div style={{ padding: '14px 20px', background: 'rgba(50,200,100,0.1)', border: '1px solid rgba(50,200,100,0.3)', borderRadius: '8px', fontSize: '13px', color: '#4ade80', fontWeight: '500' }}>
-                ✓ Salvo no Notion como "Applied 🙂"
-              </div>
-            ) : (
-              <button
-                onClick={handleApplied}
-                disabled={applying}
-                style={{ width: '100%', padding: '14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.8)', cursor: applying ? 'not-allowed' : 'pointer', opacity: applying ? 0.5 : 1, letterSpacing: '0.03em', backdropFilter: 'blur(12px)' }}
-              >
-                {applying ? 'Salvando no Notion...' : '✓ Marcar como Aplicado'}
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Requisitos da vaga */}
         {requirements.length > 0 && (
@@ -746,25 +649,44 @@ export default function Home() {
 
         {/* Resultado */}
         {result && (
-          <div style={styles.resultCard}>
-            <div style={styles.resultHeader}>
-              <div style={styles.resultTitle}>CV Gerado</div>
-              <div style={styles.resultActions}>
-                <button className="btn-outline" style={styles.btnOutline} onClick={handleCopy}>
-                  Copiar
-                </button>
-                <button style={styles.btnOutline} onClick={() => handleDownload('docx')}>
-                  .docx
-                </button>
-                <button style={styles.btnSolid} onClick={() => handleDownload('pdf')}>
-                  Baixar PDF
-                </button>
+          <>
+            <div style={styles.resultCard}>
+              <div style={styles.resultHeader}>
+                <div style={styles.resultTitle}>CV Gerado</div>
+                <div style={styles.resultActions}>
+                  <button className="btn-outline" style={styles.btnOutline} onClick={handleCopy}>
+                    Copiar
+                  </button>
+                  <button style={styles.btnOutline} onClick={() => handleDownload('docx')}>
+                    .docx
+                  </button>
+                  <button style={styles.btnSolid} onClick={() => handleDownload('pdf')}>
+                    Baixar PDF
+                  </button>
+                </div>
               </div>
+              <div style={styles.resultContent}>{renderMarkdown(result)}</div>
             </div>
-            <div style={styles.resultContent}>{renderMarkdown(result)}</div>
-          </div>
+
+            {/* Marcar como Aplicado */}
+            <div style={{ width: '100%', maxWidth: '680px', marginTop: '8px' }}>
+              {applied ? (
+                <div style={{ padding: '14px 20px', background: 'rgba(50,200,100,0.1)', border: '1px solid rgba(50,200,100,0.3)', borderRadius: '8px', fontSize: '13px', color: '#4ade80', fontWeight: '500' }}>
+                  ✓ Salvo no Notion como "Applied 🙂"
+                </div>
+              ) : (
+                <button
+                  onClick={handleApplied}
+                  disabled={applying}
+                  style={{ width: '100%', padding: '14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.8)', cursor: applying ? 'not-allowed' : 'pointer', opacity: applying ? 0.5 : 1, letterSpacing: '0.03em', backdropFilter: 'blur(12px)' }}
+                >
+                  {applying ? 'Salvando no Notion...' : '✓ Marcar como Aplicado'}
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
-    </BackgroundPaths>
+    </div>
   )
 }
